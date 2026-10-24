@@ -1,0 +1,310 @@
+{
+  "name": "Nóticias Diárias",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\"Você é um jornalista sênior responsável por redigir a newsletter diária enviada por e-mail para leitores cadastrados. Seu objetivo é selecionar e resumir as principais notícias do dia {{ $now.format('dd/MM/yyyy') }} no Brasil e no Mundo.\n\nNÃO INCLUA O TEXTO EXPLICITO NO EMAIL: \"ASSUNTO DO EMAIL\".\n\nTODO TEXTO DEVE TER O PADRÃO UTF-8 PT-BR, NÃO IGNORE OS ACENTOS E PONTUAÇÕES.\n\nEditorias obrigatórias:\n\nEconomia\n\nPolítica\n\nTecnologia\n\nPrevisão do Tempo\n\nDestaque Internacional\n\nRegras de Formatação (Texto Puro):\n\nNAO use código HTML, NENHUMA tag de marcação e NENHUM caractere de Markdown (como asteriscos *, hastags #, travessões de código ou colchetes de links).\n\nEstruture o texto apenas com quebras de linha duplas, emojis simples e letras maiúsculas para títulos, garantindo uma leitura leve e escaneável em qualquer tela.\n\nInclua no início uma sugestão de 'ASSUNTO DO E-MAIL' e a 'DATA'.\n\nPara cada notícia, siga rigorosamente esta ordem:\n\nNOME DA CATEGORIA (em maiúsculas, com emoji)\n\nTítulo da Notícia (direto e impactante)\n\nResumo (máximo de 3 frases explicando o fato e seu impacto)\n\nFonte e Link (escreva explicitamente: 'Fonte: [Nome do Veículo] - [URL do link]')\n\nSepare cada categoria visualmente usando uma linha de traços simples (Exemplo: ----------------------------------------).\n\nEncerre o e-mail obrigatoriamente com a frase final em uma linha isolada:\n\nVocê bem informado.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        64
+      ],
+      "id": "75228ce8-62e9-4121-b6c2-5b20b38584e2",
+      "name": "AI Agente de Nóticias"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        64
+      ],
+      "id": "181bbba3-6878-4b49-904b-f5ae59da6016",
+      "name": "Dispara às 06h"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1bA0g3XzdAovTABaEFZ_XWmSHwtrHXvxC8-qb95CNgWc",
+          "mode": "list",
+          "cachedResultName": "Cadastro para Nóticias do Dia (respostas)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bA0g3XzdAovTABaEFZ_XWmSHwtrHXvxC8-qb95CNgWc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 439573296,
+          "mode": "list",
+          "cachedResultName": "Respostas ao formulário 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bA0g3XzdAovTABaEFZ_XWmSHwtrHXvxC8-qb95CNgWc/edit#gid=439573296"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        64
+      ],
+      "id": "2de09446-4a39-453a-bf02-a1b58e0f9912",
+      "name": "Lista de E-mails cadastrados",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "sIWpM0lWve5FI3rA",
+          "name": "E-mails cadastrados no Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6100a26f-cf57-4a1e-8cf1-991874106575",
+              "name": "Nome Completo:",
+              "value": "={{ $json[\"Nome Completo:\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "50f040d1-e319-400f-af64-49947f9db295",
+              "name": "E-mail:",
+              "value": "={{ $json[\"E-mail:\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        64
+      ],
+      "id": "d0ae063d-dfef-4eb5-af7a-55a1e6fa39d2",
+      "name": "Nome e Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json[\"E-mail:\"] }}",
+        "subject": "=Nóticia do Dia {{ $now.format('dd-MM-yyyy') }}",
+        "emailType": "text",
+        "message": "=Bom dia, {{ $('Nome e Email').item.json[\"Nome Completo:\"].split(\" \")[0] }}\n{{ $('AI Agente de Nóticias').item.json.output.replace(/^ASSUNTO DO E-MAIL:.*$/gm, '').trim(); }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        -80
+      ],
+      "id": "1e4be5d4-68ef-457a-a49d-8bfdd51bb04f",
+      "name": "Envia e-mail",
+      "webhookId": "7e1945ae-da7e-47f7-832a-ef76da6d2e73",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "pozv0OC3OxT8Fe54",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 0.5
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        112
+      ],
+      "id": "f4f69a44-1116-468f-8975-03028d991cef",
+      "name": "Aguarda envio",
+      "webhookId": "ce1173f9-b1c5-4d5a-8959-e93051d3d374"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1024,
+        64
+      ],
+      "id": "552af996-1dd7-4533-8be9-82dada995175",
+      "name": "Array de Email a ser enviado"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        288
+      ],
+      "id": "b70c0d0d-53c9-4182-a6c9-ba386331f14e",
+      "name": "Gemini AI",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NwCIqQslhjLWJudL",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "SELECIONA AS NOTÍCIAS E CRIA OS RESUMOS\n",
+        "height": 416,
+        "width": 288,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        192,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "00a36a71-95fe-4e55-944e-83423babdacd",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "E-MAILS CADASTRADOS",
+        "height": 224,
+        "width": 368
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        544,
+        16
+      ],
+      "typeVersion": 1,
+      "id": "3db4c70a-75bf-40cb-a1ec-04cad0adc967",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agente de Nóticias": {
+      "main": [
+        [
+          {
+            "node": "Lista de E-mails cadastrados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispara às 06h": {
+      "main": [
+        [
+          {
+            "node": "AI Agente de Nóticias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lista de E-mails cadastrados": {
+      "main": [
+        [
+          {
+            "node": "Nome e Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nome e Email": {
+      "main": [
+        [
+          {
+            "node": "Array de Email a ser enviado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aguarda envio": {
+      "main": [
+        [
+          {
+            "node": "Array de Email a ser enviado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Array de Email a ser enviado": {
+      "main": [
+        [
+          {
+            "node": "Envia e-mail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aguarda envio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agente de Nóticias",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia e-mail": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "8600c8ea-fc03-43ec-acdf-68118e2aeade",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "78d5d95a20214049340ced81f30ea5b9b1bb2bcd95ea4b12a22e81e8754dcf4b"
+  },
+  "nodeGroups": [],
+  "id": "P1AGGlzgoTOIxF4e",
+  "tags": []
+}
